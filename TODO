@@ -1,0 +1,2 @@
+- rip out overspecialized setup functions/make __init__ more modular to accomplish this task
+- can gnuplot accept arbitrary plot data without having to use a temporary file?  A socket maybe?

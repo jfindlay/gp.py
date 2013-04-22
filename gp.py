@@ -4,9 +4,11 @@ from subprocess import Popen,PIPE
 
 ISO_8601 = '%Y-%m-%dT%H:%M:%S'
 
-class Gnuplot:
+class GP:
   def __init__(self):
     self.term = 'wxt'
+    self.samples = 128
+    self.isosamples = 128
     self.canvas_size = (1024,600)
     self.time_format = ISO_8601
     self.axis_time_format = '%m-%d\\n%H:%M'
@@ -15,8 +17,8 @@ class Gnuplot:
     self.history = open('%s/pygp.hist' % self._ensure_dir('%s/.cache' % os.getenv('HOME')),'w')
     self.gp = Popen(('gnuplot',),stdout=PIPE,stdin=PIPE,close_fds=True)
     self.stdin,self.stdout = self.gp.stdin,self.gp.stdout
-    self.write('set samples 128\n')
-    self.write('set isosamples 128\n')
+    self.write('set samples %d\n' % self.samples)
+    self.write('set isosamples %d\n' % self.isosamples)
     self.write('set key top left\n')
     self.set_datafile_separator()
     self.set_term()
@@ -46,12 +48,12 @@ class Gnuplot:
     sys.stderr.flush()
     sys.exit(1)
 
-  def write(self,a):
+  def write(self,arg):
     '''
-    submit command 'a' to gnuplot and write it to history
+    submit command 'arg' to gnuplot and write it to history
     '''
-    self.stdin.write(a)
-    self.history.write(a)
+    self.stdin.write(arg)
+    self.history.write(arg)
 
   def set_datafile_separator(self,f_sep=None):
     if f_sep : s = f_sep
@@ -75,12 +77,12 @@ class Gnuplot:
     else : f = self.time_format
     self.set('timefmt "%s"' % f)
 
-  def set(self,a=None):
+  def set(self,arg=None):
     '''
-    set gnuplot setting 'a'
+    set gnuplot setting 'arg'
     '''
-    if a:
-      self.write('set %s\n' % a)
+    if arg:
+      self.write('set %s\n' % arg)
 
   def write_file(self,f_name,*args):
     '''
@@ -101,9 +103,9 @@ class Gnuplot:
       self.files[f_name].write('%s\n' % line)
     self.files[f_name].close()
 
-  def plot(self,a=None):
+  def plot(self,arg=None):
     '''
-    plot with argument 'a'
+    plot with argument 'arg'
     '''
-    self.write('plot %s\n' % a)
+    self.write('plot %s\n' % arg)
     self.gp.wait()
