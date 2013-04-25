@@ -1,7 +1,5 @@
 # gp.py: a simple, transparent python gnuplot interface
-import os,sys,logging
-from time import sleep
-from subprocess import Popen,PIPE
+import os,sys,time,subprocess
 
 ISO_8601 = '%Y-%m-%dT%H:%M:%S'
 
@@ -22,7 +20,7 @@ class GPHistFile:
 class GP:
   def __init__(self,*args,**kwargs):
     # gnuplot
-    self.gp = Popen(('gnuplot',),stdout=PIPE,stdin=PIPE,close_fds=True)
+    self.gp = subprocess.Popen(('gnuplot',),stdout=subprocess.PIPE,stdin=subprocess.PIPE,close_fds=True)
     self.stdin,self.stdout = self.gp.stdin,self.gp.stdout
 
     # history
@@ -74,37 +72,47 @@ class GP:
   def read(self):
     return self.stdout.read()
 
-  def write(self,arg):
+  def write(self,arg,sleep=0.1):
     '''
     submit command 'arg' to gnuplot and write it to history
     '''
     self.stdin.write('%s\n' % arg)
-    sleep(0.25) # gnuplot actions are nonblocking
+    time.sleep(sleep) # gnuplot actions are nonblocking
     self.history.write('%s\n' % arg)
 
-  def write_file(self,f_name,*columns):
+  def write_here(self,name,rows,EOD='EOD'):
     '''
-    Write data to temp file used to construct gnuplot plots.  All columns
-    supplied must be 1D iterables of the same size.
+    format 'rows' into a gnuplot here document named '$name' (supported by
+    >=gnuplot-2.7).  'rows' consists of an iterable of strings, where each
+    string is a row of data
+    '''
+    here = '$%s << %s\n' % (name,EOD)
+    for row in rows:
+      here += '%s\n' % row
+    here += '%s\n' % EOD
+    self.write(here)
+
+  def write_file(self,f_name,*matrix):
+    '''
+    Write data to temp file used to construct gnuplot plots.  All matrix
+    columns supplied must be 1D iterables of the same size.
     '''
     def get_separator():
       self.write('show datafile separator')
-      result = re.match(r'^\s+datafile fields separated by (.+)\s*$',self.read()).groups(1)
-      if result == 'whitespace':
+      if 'whitespace' == re.match(r'^\s+datafile fields separated by (.+)\s*$',self.read()).groups(1):
         return ' '
       else:
         return re.match(r'^"(.+)"$').groups(1)
     f_sep = get_separator()
     self.files[f_name] = open(f_name,'w')
-    for row in xrange(len(columns[0])):
+    for row in xrange(len(matrix[0])):
       line = ''
-      for column in columns:
-        if not isinstance(column[row],str):
-          element = '%g' % column[row]
-        else:
-          element = column[row]
+      for column in xrange(len(matrix)):
         if len(line):
           line += f_sep
-        line += element
+        if not isinstance(matrix[column][row],str):
+          line += '%g' % matrix[column][row]
+        else:
+          line += matrix[column][row]
       self.files[f_name].write('%s\n' % line)
     self.files[f_name].close()
