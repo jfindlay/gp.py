@@ -84,7 +84,7 @@ class GP:
   def write_here(self,name,rows,EOD='EOD'):
     '''
     format 'rows' into a gnuplot here document named '$name' (supported by
-    >=gnuplot-2.7).  'rows' consists of an iterable of strings, where each
+    >=gnuplot-4.7.p0).  'rows' consists of an iterable of strings, where each
     string is a row of data
     '''
     here = '$%s << %s\n' % (name,EOD)
