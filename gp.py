@@ -12,7 +12,8 @@ class GPHistFile:
     except : self.file = None
   def write(self,string):
     if self.file:
-      self.file.write(string)
+      if not self.file.closed:
+        self.file.write(string)
   def close(self):
     if self.file:
       self.file.close()
@@ -24,19 +25,19 @@ class GP:
     self.stdin,self.stdout = self.gp.stdin,self.gp.stdout
 
     # history
-    hist_file = kwargs['hist_file'] if 'hist_file' in kwargs else os.path.join(os.getenv('HOME'),'.cache','gp.py.hist')
-    mode = 'w' if 'clear_hist' in kwargs and kwargs['clear_hist'] else 'a'
-    self.history = GPHistFile(hist_file,mode)
+    hfile = kwargs['hfile'] if 'hfile' in kwargs else os.path.join(os.getenv('HOME'),'.cache','gp.py.hist')
+    mode = 'w' if 'clrhist' in kwargs and kwargs['clrhist'] else 'a'
+    self.history = GPHistFile(hfile,mode)
 
     # temp data files
     self.files = {} # dictionary of temp files used to store data for plots
-    self.set('datafile separator "%s"' % (kwargs['f_sep'] if 'f_sep' in kwargs else ' '))
+    self.set('datafile separator "%s"' % (kwargs['fsep'] if 'fsep' in kwargs else ' '))
 
     # terminal
     term = kwargs['term'] if 'term' in kwargs else 'wxt'
     x,y = 800,480
-    if 'canvas_size' in kwargs:
-      x,y = kwargs['canvas_size'][0],kwargs['canvas_size'][1]
+    if 'pltsize' in kwargs:
+      x,y = kwargs['pltsize'][0],kwargs['pltsize'][1]
     self.set('term %s size %d,%d' % (term,x,y))
 
     # resolution
@@ -44,8 +45,8 @@ class GP:
     self.set('isosamples %s' % (kwargs['isosamples'] if 'isosamples' in kwargs else 128))
 
     # time formatting
-    self.set('timefmt "%s"' % (kwargs['time_format'] if 'time_format' in kwargs else ISO_8601))
-    self.axis_time_format = kwargs['axis_time_format'] if 'axis_time_format' in kwargs else '%m-%d\\n%H:%M'
+    self.set('timefmt "%s"' % (kwargs['timefmt'] if 'timefmt' in kwargs else ISO_8601))
+    self.axtimefmt = kwargs['axtimefmt'] if 'axtimefmt' in kwargs else '%m-%d\\n%H:%M'
 
     # key
     self.set('key %s' % (kwargs['key'] if 'key' in kwargs else 'top left'))
@@ -72,12 +73,12 @@ class GP:
   def read(self):
     return self.stdout.read()
 
-  def write(self,arg,sleep=0.1):
+  def write(self,arg):
     '''
     submit command 'arg' to gnuplot and write it to history
     '''
     self.stdin.write('%s\n' % arg)
-    time.sleep(sleep) # gnuplot actions are nonblocking
+    time.sleep(len(str(arg))/1000.) # gnuplot actions are nonblocking
     self.history.write('%s\n' % arg)
 
   def write_here(self,name,rows,EOD='EOD'):
@@ -103,13 +104,13 @@ class GP:
         return ' '
       else:
         return re.match(r'^"(.+)"$').groups(1)
-    f_sep = get_separator()
+    fsep = get_separator()
     self.files[f_name] = open(f_name,'w')
     for row in xrange(len(matrix[0])):
       line = ''
       for column in xrange(len(matrix)):
         if len(line):
-          line += f_sep
+          line += fsep
         if not isinstance(matrix[column][row],str):
           line += '%g' % matrix[column][row]
         else:
