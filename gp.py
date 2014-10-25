@@ -1,5 +1,6 @@
 # gp.py: a simple, transparent python gnuplot interface
-import os,sys,time,subprocess
+import os,sys,time
+from subprocess import Popen,PIPE
 
 ISO_8601 = '%Y-%m-%dT%H:%M:%S'
 
@@ -21,7 +22,7 @@ class GPHistFile:
 class GP:
   def __init__(self,*args,**kwargs):
     # gnuplot
-    self.gp = subprocess.Popen(('gnuplot',),stdout=subprocess.PIPE,stdin=subprocess.PIPE,close_fds=True)
+    self.gp = Popen(('gnuplot',),stdout=PIPE,stdin=PIPE,close_fds=True)
     self.stdin,self.stdout = self.gp.stdin,self.gp.stdout
 
     # history
