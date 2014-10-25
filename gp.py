@@ -20,35 +20,35 @@ class GPHistFile:
       self.file.close()
 
 class GP:
-  def __init__(self,*args,**kwargs):
+  def __init__(self,**settings):
     # gnuplot
     self.gp = Popen(('gnuplot',),stdout=PIPE,stdin=PIPE,close_fds=True)
     self.stdin,self.stdout = self.gp.stdin,self.gp.stdout
 
     # history
-    hfile = kwargs.get('hfile',os.path.join(os.getenv('HOME'),'.cache','gp.py.hist'))
-    mode = 'w' if kwargs.get('clrhist') else 'a'
+    hfile = settings.get('hfile',os.path.join(os.getenv('HOME'),'.cache','gp.py.hist'))
+    mode = 'w' if settings.get('clrhist') else 'a'
     self.history = GPHistFile(hfile,mode)
 
     # temp data files
     self.files = {} # dictionary of temp files used to store data for plots
-    self.set('datafile separator "{s}"'.format(s=kwargs.get('fsep',' ')))
+    self.set('datafile separator "{s}"'.format(s=settings.get('fsep',' ')))
 
     # terminal
-    term = kwargs.get('term','wxt')
-    size = kwargs.get('size',(800,480))
+    term = settings.get('term','wxt')
+    size = settings.get('size',(800,480))
     self.set('term {t} size {x},{y}'.format(t=term,x=size[0],y=size[1]))
 
     # resolution
-    self.set('samples {s}'.format(s=kwargs.get('samples',128)))
-    self.set('isosamples {i}'.format(i=kwargs.get('isosamples',128)))
+    self.set('samples {s}'.format(s=settings.get('samples',128)))
+    self.set('isosamples {i}'.format(i=settings.get('isosamples',128)))
 
     # time formatting
-    self.set('timefmt "{t}"'.format(t=kwargs.get('timefmt',ISO_8601)))
-    self.axtimefmt = kwargs.get('axtimefmt','%m-%d\\n%H:%M')
+    self.set('timefmt "{t}"'.format(t=settings.get('timefmt',ISO_8601)))
+    self.axtimefmt = settings.get('axtimefmt','%m-%d\\n%H:%M')
 
     # key
-    self.set('key {k}'.format(k=kwargs.get('key','top left')))
+    self.set('key {k}'.format(k=settings.get('key','top left')))
 
   def __del__(self):
     self.stdin.close()
@@ -79,7 +79,7 @@ class GP:
     '''
     self.stdin.write('{a}\n'.format(a=arg))
     time.sleep(len(str(arg))/1000.) # gnuplot actions are nonblocking
-    self.history.write('{a}\n'(a=arg))
+    self.history.write('{a}\n'.format(a=arg))
 
   def write_here(self,name,rows,EOD='EOD'):
     '''
