@@ -36,8 +36,8 @@ class GP:
     # terminal
     term = kwargs['term'] if 'term' in kwargs else 'wxt'
     x,y = 800,480
-    if 'pltsize' in kwargs:
-      x,y = kwargs['pltsize'][0],kwargs['pltsize'][1]
+    if 'size' in kwargs:
+      x,y = kwargs['size'][0],kwargs['size'][1]
     self.set('term %s size %d,%d' % (term,x,y))
 
     # resolution
@@ -67,6 +67,7 @@ class GP:
     return submit
 
   set = action('set')
+  unset = action('unset')
   plot = action('plot')
   splot = action('splot')
 
