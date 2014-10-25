@@ -31,23 +31,23 @@ class GP:
 
     # temp data files
     self.files = {} # dictionary of temp files used to store data for plots
-    self.set('datafile separator "%s"' % (kwargs.get('fsep',' ')))
+    self.set('datafile separator "{s}"'.format(s=kwargs.get('fsep',' ')))
 
     # terminal
     term = kwargs.get('term','wxt')
     size = kwargs.get('size',(800,480))
-    self.set('term %s size %d,%d' % (term,size[0],size[1]))
+    self.set('term {t} size {x},{y}'.format(t=term,x=size[0],y=size[1]))
 
     # resolution
-    self.set('samples %s' % (kwargs.get('samples',128)))
-    self.set('isosamples %s' % (kwargs.get('isosamples',128)))
+    self.set('samples {s}'.format(s=kwargs.get('samples',128)))
+    self.set('isosamples {i}'.format(i=kwargs.get('isosamples',128)))
 
     # time formatting
     self.set('timefmt "{t}"'.format(t=kwargs.get('timefmt',ISO_8601)))
     self.axtimefmt = kwargs.get('axtimefmt','%m-%d\\n%H:%M')
 
     # key
-    self.set('key %s' % (kwargs.get('key','top left')))
+    self.set('key {k}'.format(k=kwargs.get('key','top left')))
 
   def __del__(self):
     self.stdin.close()
@@ -59,9 +59,9 @@ class GP:
       if os.path.exists(f_name):
         os.remove(f_name)
 
-  def action(action):
+  def action(act):
     def submit(self,arg):
-      self.write('%s %s' % (action,arg))
+      self.write('{act} {arg}'.format(act=act,arg=arg))
     return submit
 
   set = action('set')
@@ -76,9 +76,9 @@ class GP:
     '''
     submit command 'arg' to gnuplot and write it to history
     '''
-    self.stdin.write('%s\n' % arg)
+    self.stdin.write('{a}\n'.format(a=arg))
     time.sleep(len(str(arg))/1000.) # gnuplot actions are nonblocking
-    self.history.write('%s\n' % arg)
+    self.history.write('{a}\n'(a=arg))
 
   def write_here(self,name,rows,EOD='EOD'):
     '''
@@ -86,10 +86,10 @@ class GP:
     >=gnuplot-4.7.p0).  'rows' consists of an iterable of strings, where each
     string is a row of data
     '''
-    here = '$%s << %s\n' % (name,EOD)
+    here = '${n} << {E}\n'.format(n=name,E=EOD)
     for row in rows:
-      here += '%s\n' % row
-    here += '%s\n' % EOD
+      here += '{r}\n'.format(r=row)
+    here += '{E}\n'.format(E=EOD)
     self.write(here)
 
   def write_file(self,f_name,*matrix):
@@ -111,8 +111,8 @@ class GP:
         if len(line):
           line += fsep
         if not isinstance(matrix[column][row],str):
-          line += '%g' % matrix[column][row]
+          line += '{element:g}'.format(element=matrix[column][row])
         else:
           line += matrix[column][row]
-      self.files[f_name].write('%s\n' % line)
+      self.files[f_name].write('{l}\n'.format(l=line))
     self.files[f_name].close()
