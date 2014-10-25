@@ -25,31 +25,29 @@ class GP:
     self.stdin,self.stdout = self.gp.stdin,self.gp.stdout
 
     # history
-    hfile = kwargs['hfile'] if 'hfile' in kwargs else os.path.join(os.getenv('HOME'),'.cache','gp.py.hist')
-    mode = 'w' if 'clrhist' in kwargs and kwargs['clrhist'] else 'a'
+    hfile = kwargs.get('hfile',os.path.join(os.getenv('HOME'),'.cache','gp.py.hist'))
+    mode = 'w' if kwargs.get('clrhist') else 'a'
     self.history = GPHistFile(hfile,mode)
 
     # temp data files
     self.files = {} # dictionary of temp files used to store data for plots
-    self.set('datafile separator "%s"' % (kwargs['fsep'] if 'fsep' in kwargs else ' '))
+    self.set('datafile separator "%s"' % (kwargs.get('fsep',' ')))
 
     # terminal
-    term = kwargs['term'] if 'term' in kwargs else 'wxt'
-    x,y = 800,480
-    if 'size' in kwargs:
-      x,y = kwargs['size'][0],kwargs['size'][1]
-    self.set('term %s size %d,%d' % (term,x,y))
+    term = kwargs.get('term','wxt')
+    size = kwargs.get('size',(800,480))
+    self.set('term %s size %d,%d' % (term,size[0],size[1]))
 
     # resolution
-    self.set('samples %s' % (kwargs['samples'] if 'samples' in kwargs else 128))
-    self.set('isosamples %s' % (kwargs['isosamples'] if 'isosamples' in kwargs else 128))
+    self.set('samples %s' % (kwargs.get('samples',128)))
+    self.set('isosamples %s' % (kwargs.get('isosamples',128)))
 
     # time formatting
-    self.set('timefmt "%s"' % (kwargs['timefmt'] if 'timefmt' in kwargs else ISO_8601))
-    self.axtimefmt = kwargs['axtimefmt'] if 'axtimefmt' in kwargs else '%m-%d\\n%H:%M'
+    self.set('timefmt "{t}"'.format(t=kwargs.get('timefmt',ISO_8601)))
+    self.axtimefmt = kwargs.get('axtimefmt','%m-%d\\n%H:%M')
 
     # key
-    self.set('key %s' % (kwargs['key'] if 'key' in kwargs else 'top left'))
+    self.set('key %s' % (kwargs.get('key','top left')))
 
   def __del__(self):
     self.stdin.close()
